@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+
+{% block title %}{{ product.name }} | {{ settings.app_name }}{% endblock %}
+{% block description %}{{ product.description or product.name }}{% endblock %}
+
+{% block content %}
+{% set wa_product = wa_link('Hola, quiero información sobre ' ~ product.name ~ ' (' ~ product.sku ~ ')') %}
+
+<div class="container product">
+  <nav class="crumbs" aria-label="Ruta">
+    <a href="/">Inicio</a><span>/</span>
+    {% if product.category %}
+      <a href="/categoria/{{ product.category.slug }}">{{ product.category.name }}</a><span>/</span>
+    {% endif %}
+    {{ product.name }}
+  </nav>
+
+  <div class="product-grid">
+    <div class="product-media">
+      {% if product.image %}
+        <img src="/static/{{ product.image }}" alt="{{ product.name }}">
+      {% else %}
+        <span class="ph ph-lg" aria-hidden="true">{{ product.category.name if product.category else settings.brand_short }}</span>
+      {% endif %}
+      {% if product.on_sale %}<span class="badge badge-sale">-{{ product.discount_pct }}%</span>{% endif %}
+    </div>
+
+    <div class="product-info">
+      <p class="card-brand">{{ product.brand }}</p>
+      <h1>{{ product.name }}</h1>
+      <p class="product-sku">Ref. {{ product.sku }}</p>
+
+      {% if product.has_price %}
+        <p class="product-price">
+          <span>{{ product.price|cop }}</span>
+          {% if product.on_sale %}<s>{{ product.compare_at_price|cop }}</s>{% endif %}
+        </p>
+        <p class="muted small">IVA incluido</p>
+      {% else %}
+        <p class="product-price"><span class="muted">Precio por confirmar</span></p>
+      {% endif %}
+
+      {% if product.description %}<p class="product-desc">{{ product.description }}</p>{% endif %}
+
+      {% if product.available %}
+        <form class="buy" data-add-to-cart>
+          {% if product.has_options %}
+            <fieldset class="options">
+              <legend>Elige una opción</legend>
+              {% for v in product.variants %}
+                <label class="chip">
+                  <input type="radio" name="variant_id" value="{{ v.id }}" data-stock="{{ v.stock }}" required {{ 'disabled' if v.stock == 0 }}>
+                  <span>{{ v.label }}</span>
+                </label>
+              {% endfor %}
+            </fieldset>
+          {% else %}
+            <input type="hidden" name="variant_id" value="{{ product.variants[0].id }}">
+          {% endif %}
+
+          <div class="buy-row">
+            <div class="qty">
+              <button type="button" data-qty-step="-1" aria-label="Quitar una unidad">−</button>
+              <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" aria-label="Cantidad">
+              <button type="button" data-qty-step="1" aria-label="Agregar una unidad">+</button>
+            </div>
+            <button class="btn btn-primary btn-grow" type="submit">Agregar al carrito</button>
+          </div>
+        </form>
+      {% elif product.has_price %}
+        <p class="notice">Agotado por ahora.</p>
+        <a class="btn btn-primary btn-block" href="{{ wa_product }}" target="_blank" rel="noopener">Consultar disponibilidad</a>
+      {% else %}
+        <a class="btn btn-primary btn-block" href="{{ wa_product }}" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+      {% endif %}
+
+      <dl class="specs">
+        {% if product.product_type %}<div><dt>Tipo</dt><dd>{{ product.product_type }}</dd></div>{% endif %}
+        {% if product.recommended_use %}<div><dt>Uso recomendado</dt><dd>{{ product.recommended_use }}</dd></div>{% endif %}
+        {% if product.material %}<div><dt>Material</dt><dd>{{ product.material }}</dd></div>{% endif %}
+        {% if product.size_info %}<div><dt>Tallas y medidas</dt><dd>{{ product.size_info }}</dd></div>{% endif %}
+        {% if product.color_info %}<div><dt>Colores</dt><dd>{{ product.color_info }}</dd></div>{% endif %}
+      </dl>
+
+      <ul class="assurances">
+        <li>Envío gratis desde {{ settings.free_shipping_threshold|cop }}</li>
+        <li>Pago con tarjeta o contra entrega</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% if related %}
+<section class="section section-tight">
+  <div class="container">
+    <h2 class="section-title">También te puede interesar</h2>
+    <div class="grid">
+      {% for p in related %}{{ product_card(p) }}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

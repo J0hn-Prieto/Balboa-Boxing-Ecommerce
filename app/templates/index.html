@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+
+{% block content %}
+<section class="hero"{% if static_exists('img/hero.jpg') %} style="background-image: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.75)), url('/static/img/hero.jpg')"{% endif %}>
+  <span class="hero-ghost" aria-hidden="true">Balboa</span>
+  <div class="container hero-inner">
+    <p class="eyebrow">Boxeo · MMA · Muay Thai</p>
+    <h1>Equipo para<br>cada asalto</h1>
+    <p class="hero-sub">Del primer entrenamiento al campeonato.</p>
+    <div class="hero-cta">
+      <a class="btn btn-amber" href="/catalogo">Comprar ahora</a>
+      <a class="btn btn-ghost" href="#categorias">Ver categorías</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="categorias">
+  <div class="container">
+    <h2 class="section-title">Categorías</h2>
+    <div class="tiles">
+      {% for c, n in nav_categories if n %}
+        {% set photo = 'img/categorias/' ~ c.slug ~ '.jpg' %}
+        <a class="tile" href="/categoria/{{ c.slug }}"{% if static_exists(photo) %} style="background-image: linear-gradient(transparent 40%, rgba(0,0,0,.8)), url('/static/{{ photo }}')"{% endif %}>
+          <span class="tile-name">{{ c.name }}</span>
+          <span class="tile-count">{{ n }} producto{{ 's' if n != 1 }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container">
+    <div class="section-head">
+      <h2 class="section-title">Destacados</h2>
+      <a class="link-arrow" href="/catalogo">Ver todo</a>
+    </div>
+    <div class="grid">
+      {% for p in featured %}{{ product_card(p) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="container">
+    <h2 class="section-title">Para cada nivel</h2>
+    <div class="levels">
+      <div class="level">
+        <h3>Principiantes</h3>
+        <p>Lo esencial para empezar bien.</p>
+      </div>
+      <div class="level">
+        <h3>Fitness y cardio box</h3>
+        <p>Equipo cómodo para entrenar a diario.</p>
+      </div>
+      <div class="level">
+        <h3>Competición</h3>
+        <p>Protección y rendimiento en el ring.</p>
+      </div>
+      <div class="level">
+        <h3>Gimnasios y entrenadores</h3>
+        <p>Material de uso rudo para tus alumnos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tight">
+  <div class="container perks">
+    <div class="perk">
+      <h3>Envío gratis</h3>
+      <p>En compras desde {{ settings.free_shipping_threshold|cop }}. Por debajo, {{ settings.shipping_cost|cop }}.</p>
+    </div>
+    <div class="perk">
+      <h3>Paga como prefieras</h3>
+      <p>Tarjeta de crédito o contra entrega.</p>
+    </div>
+    <div class="perk">
+      <h3>Asesoría directa</h3>
+      <p><a href="{{ wa_link() }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

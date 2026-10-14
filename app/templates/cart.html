@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito | {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Carrito</h1>
+  </div>
+</section>
+
+<div class="container cart">
+  {% if cart['items'] %}
+    <div class="cart-lines">
+      {% for line in cart['items'] %}
+        <article class="cart-line" data-cart-item="{{ line.id }}">
+          <a class="cart-thumb" href="/producto/{{ line.slug }}" tabindex="-1" aria-hidden="true">
+            {% if line.image %}
+              <img src="/static/{{ line.image }}" alt="">
+            {% else %}
+              <span class="ph ph-sm">{{ line.category or settings.brand_short }}</span>
+            {% endif %}
+          </a>
+          <div class="cart-line-info">
+            <h2><a href="/producto/{{ line.slug }}">{{ line.name }}</a></h2>
+            {% if line.variant_label %}<p class="muted small">{{ line.variant_label }}</p>{% endif %}
+            <p class="small">{{ line.unit_price|cop }} c/u</p>
+            <div class="cart-line-actions">
+              <div class="qty qty-sm">
+                <button type="button" data-qty-step="-1" aria-label="Quitar una unidad">−</button>
+                <input type="number" value="{{ line.quantity }}" min="1" max="{{ line.stock }}" aria-label="Cantidad de {{ line.name }}" data-cart-qty>
+                <button type="button" data-qty-step="1" aria-label="Agregar una unidad">+</button>
+              </div>
+              <button class="link-btn" type="button" data-cart-remove>Quitar</button>
+            </div>
+          </div>
+          <p class="cart-line-total">{{ line.line_total|cop }}</p>
+        </article>
+      {% endfor %}
+    </div>
+
+    <aside class="summary">
+      <h2>Resumen</h2>
+      <dl>
+        <div><dt>Subtotal</dt><dd>{{ cart.subtotal|cop }}</dd></div>
+        <div><dt>Envío</dt><dd>{{ 'Gratis' if cart.shipping_cost == 0 else cart.shipping_cost|cop }}</dd></div>
+        <div class="summary-total"><dt>Total</dt><dd>{{ cart.total|cop }}</dd></div>
+      </dl>
+      {% if cart.missing_for_free_shipping > 0 %}
+        <p class="notice">Te faltan {{ cart.missing_for_free_shipping|cop }} para el envío gratis.</p>
+      {% endif %}
+      <button class="btn btn-primary btn-block" type="button" disabled>Finalizar compra</button>
+      <p class="muted small">El pago se habilita en la siguiente etapa del proyecto.</p>
+      <a class="link-arrow" href="/catalogo">Seguir comprando</a>
+    </aside>
+  {% else %}
+    <div class="empty">
+      <h2>Tu carrito está vacío</h2>
+      <p>Agrega productos para continuar.</p>
+      <a class="btn btn-primary" href="/catalogo">Ver catálogo</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

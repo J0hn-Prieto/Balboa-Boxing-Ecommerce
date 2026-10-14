@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_macros.html" import product_card %}
+
+{% set heading = category.name if category else ('Resultados para "' ~ f.q ~ '"' if f.q else 'Catálogo') %}
+{% block title %}{{ heading }} | {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <nav class="crumbs" aria-label="Ruta">
+      <a href="/">Inicio</a><span>/</span>
+      {% if category %}<a href="/catalogo">Catálogo</a><span>/</span>{{ category.name }}{% else %}Catálogo{% endif %}
+    </nav>
+    <h1>{{ heading }}</h1>
+    <p class="muted">{{ total }} producto{{ 's' if total != 1 }}</p>
+  </div>
+</section>
+
+<div class="container catalog">
+  <aside class="filters">
+    <details class="filters-box" open>
+      <summary>Filtros</summary>
+      <form action="/catalogo" method="get">
+        {% if f.q %}<input type="hidden" name="q" value="{{ f.q }}">{% endif %}
+
+        <label class="field">
+          <span>Categoría</span>
+          <select name="categoria">
+            <option value="">Todas</option>
+            {% for c, n in nav_categories if n %}
+              <option value="{{ c.slug }}" {{ 'selected' if f.category == c.slug }}>{{ c.name }} ({{ n }})</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Marca</span>
+          <select name="marca">
+            <option value="">Todas</option>
+            {% for b in brands %}
+              <option value="{{ b }}" {{ 'selected' if f.brand == b }}>{{ b }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <div class="field">
+          <span>Precio (COP)</span>
+          <div class="field-row">
+            <input type="number" name="precio_min" min="0" step="1000" placeholder="Mín." aria-label="Precio mínimo"
+                   value="{{ f.min_price if f.min_price is not none }}">
+            <input type="number" name="precio_max" min="0" step="1000" placeholder="Máx." aria-label="Precio máximo"
+                   value="{{ f.max_price if f.max_price is not none }}">
+          </div>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" name="disponibles" value="1" {{ 'checked' if f.in_stock }}>
+          <span>Solo disponibles</span>
+        </label>
+
+        <label class="field">
+          <span>Ordenar por</span>
+          <select name="orden">
+            {% for key, label in sort_options.items() %}
+              <option value="{{ key }}" {{ 'selected' if f.sort == key }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit">Aplicar</button>
+        <a class="filters-clear" href="/catalogo">Limpiar filtros</a>
+      </form>
+    </details>
+  </aside>
+
+  <div class="catalog-results">
+    {% if products %}
+      <div class="grid">
+        {% for p in products %}{{ product_card(p) }}{% endfor %}
+      </div>
+
+      {% if pages > 1 %}
+        <nav class="pager" aria-label="Páginas">
+          {% if f.page > 1 %}<a href="{{ page_url(f.page - 1) }}" rel="prev">Anterior</a>{% endif %}
+          <span>Página {{ f.page }} de {{ pages }}</span>
+          {% if f.page < pages %}<a href="{{ page_url(f.page + 1) }}" rel="next">Siguiente</a>{% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="empty">
+        <h2>Sin resultados</h2>
+        <p>Prueba con otra búsqueda o quita algunos filtros.</p>
+        <a class="btn btn-primary" href="/catalogo">Ver todo el catálogo</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

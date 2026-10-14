@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada | {{ settings.app_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="empty">
+    <h1>Página no encontrada</h1>
+    <p>El enlace no existe o el producto ya no está disponible.</p>
+    <a class="btn btn-primary" href="/catalogo">Ver catálogo</a>
+  </div>
+</div>
+{% endblock %}
