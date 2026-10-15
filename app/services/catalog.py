@@ -28,6 +28,14 @@ class ProductFilters:
     page_size: int = 12
 
 
+def search_text_for(product: Product) -> str:
+    """Texto en minúsculas y sin tildes que usa el buscador de la tienda."""
+    category = product.category.name if product.category else ""
+    parts = [product.sku, product.name, product.brand, product.product_type, category,
+             product.description, product.recommended_use]
+    return normalize(" ".join(p for p in parts if p))
+
+
 def _in_stock_clause():
     return (
         select(ProductVariant.id)

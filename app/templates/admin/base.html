@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Panel{% endblock %} | {{ settings.brand_short }} admin</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/admin.css?v=1">
+</head>
+<body class="adm">
+  {% block shell %}
+  <div class="adm-shell">
+    <header class="adm-side">
+      <a class="adm-brand" href="/admin">
+        <span class="adm-wordmark">{{ settings.brand_short }}</span>
+        <span class="adm-brand-sub">Panel</span>
+      </a>
+      <nav class="adm-nav" aria-label="Panel">
+        <a href="/admin" {% if section == 'resumen' %}aria-current="page"{% endif %}>Resumen</a>
+        <a href="/admin/productos" {% if section == 'productos' %}aria-current="page"{% endif %}>Productos</a>
+        <a href="/admin/ordenes" {% if section == 'ordenes' %}aria-current="page"{% endif %}>Órdenes</a>
+        <a href="/admin/importar" {% if section == 'importar' %}aria-current="page"{% endif %}>Importar Excel</a>
+      </nav>
+      <div class="adm-side-foot">
+        <a href="/" target="_blank" rel="noopener">Ver tienda ↗</a>
+        <form method="post" action="/admin/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf }}">
+          <button class="adm-linkbtn" type="submit">Cerrar sesión</button>
+        </form>
+        {% if admin_email %}<p class="adm-user">{{ admin_email }}</p>{% endif %}
+      </div>
+    </header>
+
+    <main class="adm-main" id="contenido">
+      {% if flash %}
+        <p class="adm-flash adm-flash-{{ flash[0] }}" role="status">{{ flash[1] }}</p>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% endblock %}
+  <script src="/static/js/admin.js?v=1" defer></script>
+</body>
+</html>

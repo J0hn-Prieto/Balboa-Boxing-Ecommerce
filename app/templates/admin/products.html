@@ -1,0 +1,69 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import stock_chip, pager %}
+{% block title %}Productos{% endblock %}
+{% block content %}
+<div class="adm-head">
+  <h1>Productos <span class="adm-count">{{ total }}</span></h1>
+  <a class="adm-btn adm-btn-primary" href="/admin/productos/nuevo">Nuevo producto</a>
+</div>
+
+<form class="adm-toolbar" method="get" action="/admin/productos">
+  <input type="search" name="q" id="q" value="{{ q }}" placeholder="Buscar por nombre o referencia" aria-label="Buscar productos">
+  <select name="categoria" id="categoria" aria-label="Categoría">
+    <option value="">Todas las categorías</option>
+    {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if categoria == c.id|string }}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button class="adm-btn" type="submit">Filtrar</button>
+  {% if estado %}<input type="hidden" name="estado" value="{{ estado }}">{% endif %}
+</form>
+
+<nav class="adm-tabs" aria-label="Estado">
+  {% for key, label in filters.items() %}
+    <a href="/admin/productos?estado={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if categoria %}&categoria={{ categoria }}{% endif %}"
+       {% if estado == key %}aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if products %}
+<div class="adm-table-wrap">
+  <table class="adm-table adm-cards">
+    <thead>
+      <tr><th></th><th>Producto</th><th>Categoría</th><th class="num">Precio</th><th>Stock</th><th>Tienda</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr class="{{ 'is-hidden' if not p.is_active }}">
+        <td class="thumb">
+          {% if p.image %}<img src="/static/{{ p.image }}" alt="" loading="lazy">{% else %}<span class="thumb-ph" aria-hidden="true"></span>{% endif %}
+        </td>
+        <td class="name">
+          <a href="/admin/productos/{{ p.id }}">{{ p.name }}</a>
+          <span class="adm-sku">{{ p.sku }}{% if p.has_options %} · {{ p.variants|length }} opciones{% endif %}</span>
+        </td>
+        <td class="cat">{{ p.category.name if p.category else '—' }}</td>
+        <td class="num">{% if p.has_price %}{{ p.price|cop }}{% if p.on_sale %}<s>{{ p.compare_at_price|cop }}</s>{% endif %}{% else %}—{% endif %}</td>
+        <td class="stock">{{ stock_chip(p, low_stock) }}</td>
+        <td class="shop">
+          <form method="post" action="/admin/productos/{{ p.id }}/visibilidad">
+            <input type="hidden" name="csrf_token" value="{{ csrf }}">
+            <input type="hidden" name="next" value="{{ here }}">
+            <button class="adm-toggle" type="submit" aria-pressed="{{ 'true' if p.is_active else 'false' }}"
+                    title="{{ 'Ocultar de la tienda' if p.is_active else 'Mostrar en la tienda' }}">
+              {{ 'Visible' if p.is_active else 'Oculto' }}
+            </button>
+          </form>
+        </td>
+        <td class="edit"><a class="adm-link" href="/admin/productos/{{ p.id }}">Editar</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(page, pages, page_url) }}
+{% else %}
+  <div class="adm-empty">
+    <h2>No hay productos con este filtro</h2>
+    <p><a href="/admin/productos">Ver todos los productos</a> o <a href="/admin/productos/nuevo">crea uno nuevo</a>.</p>
+  </div>
+{% endif %}
+{% endblock %}

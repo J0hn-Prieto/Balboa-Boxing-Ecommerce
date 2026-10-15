@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% block title %}Iniciar sesión{% endblock %}
+{% block shell %}
+<main class="adm-login">
+  <div class="adm-login-box">
+    <p class="adm-wordmark adm-wordmark-lg">{{ settings.brand_short }}</p>
+    <h1>Panel de administración</h1>
+
+    {% if flash %}<p class="adm-flash adm-flash-{{ flash[0] }}" role="status">{{ flash[1] }}</p>{% endif %}
+    {% if error %}<p class="adm-flash adm-flash-error" role="alert">{{ error }}</p>{% endif %}
+
+    {% if no_admins %}
+      <div class="adm-note">
+        <p>Todavía no hay administradores. Crea el primero desde la terminal, en la carpeta del proyecto:</p>
+        <code>python -m scripts.create_admin tu@correo.com</code>
+      </div>
+    {% endif %}
+
+    <form method="post" action="/admin/login" class="adm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label class="adm-field">
+        <span>Correo</span>
+        <input type="email" name="email" id="email" value="{{ email or '' }}" autocomplete="username" required autofocus>
+      </label>
+      <label class="adm-field">
+        <span>Contraseña</span>
+        <input type="password" name="password" id="password" autocomplete="current-password" required>
+      </label>
+      <button class="adm-btn adm-btn-primary adm-btn-block" type="submit">Entrar</button>
+    </form>
+    <a class="adm-back" href="/">← Volver a la tienda</a>
+  </div>
+</main>
+{% endblock %}

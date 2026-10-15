@@ -1,0 +1,151 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import field_error %}
+{% set editing = product is not none %}
+{% block title %}{{ product.name if editing else 'Nuevo producto' }}{% endblock %}
+
+{% macro variant_row(i, row, errors) %}
+<div class="adm-vrow {{ 'has-error' if errors.get('v-' ~ i) }}" data-variant-row>
+  <input type="hidden" name="v-{{ i }}-id" value="{{ row.id }}">
+  <label class="adm-field"><span>Talla o peso</span>
+    <input type="text" name="v-{{ i }}-size" id="v-{{ i }}-size" value="{{ row.size }}" maxlength="40" placeholder="Ej. 14 oz">
+  </label>
+  <label class="adm-field"><span>Color</span>
+    <input type="text" name="v-{{ i }}-color" id="v-{{ i }}-color" value="{{ row.color }}" maxlength="60" placeholder="Ej. Negro">
+  </label>
+  <label class="adm-field adm-field-stock"><span>Stock</span>
+    <input type="number" name="v-{{ i }}-stock" id="v-{{ i }}-stock" value="{{ row.stock }}" min="0" step="1" inputmode="numeric">
+  </label>
+  <label class="adm-check adm-vdel">
+    <input type="checkbox" name="v-{{ i }}-delete" id="v-{{ i }}-delete" value="1" {{ 'checked' if row.delete }}>
+    <span>Eliminar</span>
+  </label>
+  {% if errors.get('v-' ~ i) %}<p class="adm-error">{{ errors['v-' ~ i] }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<nav class="adm-crumbs"><a href="/admin/productos">Productos</a> / {{ v.sku if editing else 'Nuevo' }}</nav>
+<div class="adm-head">
+  <h1>{{ product.name if editing else 'Nuevo producto' }}</h1>
+  {% if editing %}
+    <div class="adm-head-actions">
+      {% if product.is_active %}<a class="adm-btn" href="/producto/{{ product.slug }}" target="_blank" rel="noopener">Ver en la tienda ↗</a>{% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% if errors %}
+  <p class="adm-flash adm-flash-error" role="alert">Revisa los campos marcados. No se guardó ningún cambio.</p>
+{% endif %}
+
+<form class="adm-form adm-product" method="post" enctype="multipart/form-data"
+      action="{{ '/admin/productos/' ~ product.id if editing else '/admin/productos/nuevo' }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+
+  <div class="adm-product-main">
+    <section class="adm-panel">
+      <h2>Información</h2>
+      <div class="adm-grid2">
+        <label class="adm-field {{ 'has-error' if errors.sku }}"><span>Referencia (ID producto)</span>
+          <input type="text" name="sku" id="sku" value="{{ v.sku }}" maxlength="40" required placeholder="TB-061">
+          {{ field_error(errors, 'sku') }}
+        </label>
+        <label class="adm-field {{ 'has-error' if errors.brand }}"><span>Marca</span>
+          <input type="text" name="brand" id="brand" value="{{ v.brand }}" maxlength="80" placeholder="BALBOA Boxing">
+          {{ field_error(errors, 'brand') }}
+        </label>
+      </div>
+      <label class="adm-field {{ 'has-error' if errors.name }}"><span>Nombre</span>
+        <input type="text" name="name" id="name" value="{{ v.name }}" maxlength="200" required>
+        {{ field_error(errors, 'name') }}
+      </label>
+      <div class="adm-grid2">
+        <label class="adm-field {{ 'has-error' if errors.category_id }}"><span>Categoría</span>
+          <select name="category_id" id="category_id">
+            <option value="">Sin categoría</option>
+            {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if v.category_id == c.id|string }}>{{ c.name }}</option>{% endfor %}
+          </select>
+          {{ field_error(errors, 'category_id') }}
+        </label>
+        <label class="adm-field {{ 'has-error' if errors.product_type }}"><span>Tipo</span>
+          <input type="text" name="product_type" id="product_type" value="{{ v.product_type }}" maxlength="120" placeholder="Guantes de entrenamiento 14 onzas">
+          {{ field_error(errors, 'product_type') }}
+        </label>
+      </div>
+      <label class="adm-field"><span>Descripción</span>
+        <textarea name="description" id="description" rows="4">{{ v.description }}</textarea>
+      </label>
+      <div class="adm-grid2">
+        <label class="adm-field {{ 'has-error' if errors.material }}"><span>Material</span>
+          <input type="text" name="material" id="material" value="{{ v.material }}" maxlength="200">
+          {{ field_error(errors, 'material') }}
+        </label>
+        <label class="adm-field {{ 'has-error' if errors.recommended_use }}"><span>Uso recomendado</span>
+          <input type="text" name="recommended_use" id="recommended_use" value="{{ v.recommended_use }}" maxlength="200">
+          {{ field_error(errors, 'recommended_use') }}
+        </label>
+        <label class="adm-field {{ 'has-error' if errors.size_info }}"><span>Tallas y medidas (texto)</span>
+          <input type="text" name="size_info" id="size_info" value="{{ v.size_info }}" maxlength="200">
+          {{ field_error(errors, 'size_info') }}
+        </label>
+        <label class="adm-field {{ 'has-error' if errors.color_info }}"><span>Colores (texto)</span>
+          <input type="text" name="color_info" id="color_info" value="{{ v.color_info }}" maxlength="200">
+          {{ field_error(errors, 'color_info') }}
+        </label>
+      </div>
+    </section>
+
+    <section class="adm-panel">
+      <h2>Stock</h2>
+      <p class="adm-help">Una fila por cada talla o color. Si el producto es de presentación única, deja una sola fila con talla y color vacíos.</p>
+      {% if errors.variants %}<p class="adm-error">{{ errors.variants }}</p>{% endif %}
+      <div class="adm-variants" data-variants>
+        {% for row in v.variants %}{{ variant_row(loop.index0, row, errors) }}{% endfor %}
+      </div>
+      <template data-variant-template>
+        {{ variant_row('__i__', {'id': '', 'size': '', 'color': '', 'stock': '0', 'delete': False}, {}) }}
+      </template>
+      <button class="adm-btn" type="button" data-add-variant>Agregar talla o color</button>
+    </section>
+  </div>
+
+  <aside class="adm-product-side">
+    <section class="adm-panel">
+      <h2>Precio</h2>
+      <label class="adm-field {{ 'has-error' if errors.price }}"><span>Precio actual (COP, IVA incluido)</span>
+        <input type="text" name="price" id="price" value="{{ v.price }}" inputmode="numeric" placeholder="Ej. 189000">
+        {{ field_error(errors, 'price') }}
+      </label>
+      <label class="adm-field {{ 'has-error' if errors.compare_at_price }}"><span>Precio anterior (para oferta)</span>
+        <input type="text" name="compare_at_price" id="compare_at_price" value="{{ v.compare_at_price }}" inputmode="numeric" placeholder="Opcional">
+        {{ field_error(errors, 'compare_at_price') }}
+      </label>
+      <p class="adm-help">Sin precio, el producto aparece como "Precio por confirmar" y no se puede comprar.</p>
+    </section>
+
+    <section class="adm-panel">
+      <h2>Foto</h2>
+      {% if editing and product.image %}
+        <img class="adm-photo" src="/static/{{ product.image }}" alt="Foto actual de {{ product.name }}">
+        <label class="adm-check"><input type="checkbox" name="remove_image" id="remove_image" value="1" {{ 'checked' if v.remove_image }}><span>Quitar la foto</span></label>
+      {% endif %}
+      <label class="adm-field {{ 'has-error' if errors.image }}"><span>{{ 'Cambiar foto' if editing and product.image else 'Subir foto' }}</span>
+        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/webp">
+        {{ field_error(errors, 'image') }}
+      </label>
+      <p class="adm-help">JPG, PNG o WEBP, máximo 5 MB. Ideal: cuadrada, fondo claro.</p>
+    </section>
+
+    <section class="adm-panel">
+      <h2>Tienda</h2>
+      <label class="adm-check"><input type="checkbox" name="is_active" id="is_active" value="1" {{ 'checked' if v.is_active }}><span>Visible en la tienda</span></label>
+      <label class="adm-check"><input type="checkbox" name="is_featured" id="is_featured" value="1" {{ 'checked' if v.is_featured }}><span>Destacado en la portada</span></label>
+    </section>
+
+    <div class="adm-save">
+      <button class="adm-btn adm-btn-primary adm-btn-block" type="submit">{{ 'Guardar cambios' if editing else 'Crear producto' }}</button>
+      <a class="adm-back" href="/admin/productos">Cancelar</a>
+    </div>
+  </aside>
+</form>
+{% endblock %}

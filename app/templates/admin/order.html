@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import status_chip %}
+{% set label = order.number or ('#' ~ order.id) %}
+{% block title %}Orden {{ label }}{% endblock %}
+{% block content %}
+<nav class="adm-crumbs"><a href="/admin/ordenes">Órdenes</a> / {{ label }}</nav>
+<div class="adm-head">
+  <h1>Orden {{ label }} {{ status_chip(order.status, statuses) }}</h1>
+</div>
+
+<div class="adm-cols">
+  <section class="adm-panel">
+    <h2>Productos</h2>
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>Producto</th><th class="num">Precio</th><th class="num">Cant.</th><th class="num">Total</th></tr></thead>
+        <tbody>
+          {% for it in order.items %}
+          <tr>
+            <td class="name">{{ it.product_name }}<span class="adm-sku">{{ it.sku }}{% if it.variant_label %} · {{ it.variant_label }}{% endif %}</span></td>
+            <td class="num">{{ it.unit_price|cop }}</td>
+            <td class="num">{{ it.quantity }}</td>
+            <td class="num">{{ (it.unit_price * it.quantity)|cop }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <dl class="adm-totals">
+      <div><dt>Subtotal</dt><dd>{{ order.subtotal|cop }}</dd></div>
+      <div><dt>Envío</dt><dd>{{ 'Gratis' if order.shipping_cost == 0 else order.shipping_cost|cop }}</dd></div>
+      <div class="is-total"><dt>Total</dt><dd>{{ order.total|cop }}</dd></div>
+    </dl>
+  </section>
+
+  <div class="adm-stack">
+    <section class="adm-panel">
+      <h2>Estado</h2>
+      <form method="post" action="/admin/ordenes/{{ order.id }}/estado" class="adm-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf }}">
+        <select name="status" id="status" aria-label="Estado de la orden">
+          {% for key, l in statuses.items() %}<option value="{{ key }}" {{ 'selected' if order.status == key }}>{{ l }}</option>{% endfor %}
+        </select>
+        <button class="adm-btn adm-btn-primary" type="submit">Actualizar</button>
+      </form>
+      <dl class="adm-dl">
+        <div><dt>Creada</dt><dd>{{ order.created_at|fecha }}</dd></div>
+        <div><dt>Pago</dt><dd>{{ payments.get(order.payment_method, order.payment_method) }}</dd></div>
+        {% if order.paid_at %}<div><dt>Pagada</dt><dd>{{ order.paid_at|fecha }}</dd></div>{% endif %}
+        {% if order.payment_transaction_id %}<div><dt>Transacción</dt><dd>{{ order.payment_transaction_id }}</dd></div>{% endif %}
+      </dl>
+    </section>
+
+    <section class="adm-panel">
+      <h2>Cliente y envío</h2>
+      <dl class="adm-dl">
+        <div><dt>Nombre</dt><dd>{{ order.customer_name }}</dd></div>
+        {% if order.customer_document %}<div><dt>Documento</dt><dd>{{ order.customer_document }}</dd></div>{% endif %}
+        <div><dt>Correo</dt><dd>{{ order.customer_email }}</dd></div>
+        <div><dt>Teléfono</dt><dd>{{ order.customer_phone }}</dd></div>
+        <div><dt>Dirección</dt><dd>{{ order.address }}, {{ order.city }}</dd></div>
+        {% if order.notes %}<div><dt>Notas</dt><dd>{{ order.notes }}</dd></div>{% endif %}
+      </dl>
+    </section>
+  </div>
+</div>
+{% endblock %}

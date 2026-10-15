@@ -8,7 +8,7 @@ from app.config import STATIC_DIR, TEMPLATES_DIR, get_settings
 from app.database import get_db
 from app.services import cart as cart_service
 from app.services import catalog
-from app.utils import format_cop, whatsapp_link
+from app.utils import format_cop, format_datetime, whatsapp_link
 
 settings = get_settings()
 router = APIRouter(include_in_schema=False)
@@ -26,6 +26,7 @@ def wa_link(message: str | None = None) -> str:
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.filters["cop"] = format_cop
+templates.env.filters["fecha"] = format_datetime
 templates.env.globals.update(settings=settings, static_exists=static_exists, wa_link=wa_link)
 
 

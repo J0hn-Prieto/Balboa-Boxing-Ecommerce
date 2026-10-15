@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import stock_chip, status_chip %}
+{% block title %}Resumen{% endblock %}
+{% block content %}
+<div class="adm-head">
+  <h1>Resumen</h1>
+  <a class="adm-btn adm-btn-primary" href="/admin/productos/nuevo">Nuevo producto</a>
+</div>
+
+<div class="adm-stats">
+  <a class="adm-stat" href="/admin/productos?estado=visibles"><span>Visibles en la tienda</span><strong>{{ stats.active }}</strong></a>
+  <a class="adm-stat {{ 'is-alert' if stats.no_price }}" href="/admin/productos?estado=sin-precio"><span>Sin precio</span><strong>{{ stats.no_price }}</strong></a>
+  <a class="adm-stat {{ 'is-alert' if stats.sold_out }}" href="/admin/productos?estado=agotados"><span>Agotados</span><strong>{{ stats.sold_out }}</strong></a>
+  <a class="adm-stat {{ 'is-warn' if stats.low }}" href="/admin/productos?estado=poco-stock"><span>Poco stock</span><strong>{{ stats.low }}</strong></a>
+  <a class="adm-stat" href="/admin/productos?estado=ocultos"><span>Ocultos</span><strong>{{ stats.hidden }}</strong></a>
+  <a class="adm-stat {{ 'is-warn' if stats.pending }}" href="/admin/ordenes?estado=pendiente"><span>Órdenes pendientes</span><strong>{{ stats.pending }}</strong></a>
+</div>
+
+{% if stats.no_price %}
+  <p class="adm-note">{{ stats.no_price }} producto{{ 's' if stats.no_price != 1 }} sin precio. Se muestran como "Precio por confirmar" y no se pueden comprar.
+    <a href="/admin/productos?estado=sin-precio">Ponerles precio</a></p>
+{% endif %}
+
+<div class="adm-cols">
+  <section class="adm-panel">
+    <h2>Stock por revisar</h2>
+    {% if attention %}
+      <ul class="adm-list">
+        {% for p in attention %}
+          <li><a href="/admin/productos/{{ p.id }}"><span class="adm-sku">{{ p.sku }}</span> {{ p.name }}</a>{{ stock_chip(p, low_stock) }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">Ningún producto con precio está agotado o con poco stock.</p>
+    {% endif %}
+  </section>
+
+  <section class="adm-panel">
+    <h2>Últimas órdenes</h2>
+    {% if recent_orders %}
+      <ul class="adm-list">
+        {% for o in recent_orders %}
+          <li><a href="/admin/ordenes/{{ o.id }}"><span class="adm-sku">{{ o.number or ('#' ~ o.id) }}</span> {{ o.customer_name }} · {{ o.total|cop }}</a>{{ status_chip(o.status, statuses) }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">Aún no hay órdenes. Aparecerán aquí cuando el checkout esté listo.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

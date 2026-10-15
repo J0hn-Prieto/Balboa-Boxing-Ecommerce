@@ -5,11 +5,12 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import OperationalError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import STATIC_DIR, get_settings
 from app.database import SessionLocal, engine
 from app.models import Base
-from app.routers import api_cart, api_catalog, web
+from app.routers import admin, api_cart, api_catalog, web
 
 settings = get_settings()
 
@@ -49,9 +50,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# La cookie de sesión solo se usa en el panel de administración.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.session_secret,
+    session_cookie="balboa_admin",
+    max_age=settings.admin_session_hours * 3600,
+    path="/admin",
+    same_site="lax",
+    https_only=settings.secure_cookies,
+)
+
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(api_catalog.router)
 app.include_router(api_cart.router)
+app.include_router(admin.router)
 app.include_router(web.router)
 
 
@@ -68,3 +81,13 @@ async def html_or_json_errors(request: Request, exc: StarletteHTTPException):
     with SessionLocal() as db:
         ctx = web.base_context(db, request.cookies.get("cart_id"))
         return web.templates.TemplateResponse(request, "404.html", ctx, status_code=404)
+
+
+@app.exception_handler(admin.LoginRequired)
+async def admin_login_required(request: Request, exc: admin.LoginRequired):
+    return admin.login_redirect(exc)
+
+
+@app.exception_handler(admin.AdminError)
+async def admin_error(request: Request, exc: admin.AdminError):
+    return admin.render(request, "error.html", {"message": exc.message}, status_code=exc.status_code)

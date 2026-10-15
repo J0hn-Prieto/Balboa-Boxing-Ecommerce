@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% block title %}Importar Excel{% endblock %}
+{% set opts = options or {} %}
+{% block content %}
+<div class="adm-head"><h1>Importar Excel</h1></div>
+
+{% if error %}<p class="adm-flash adm-flash-error" role="alert">{{ error }}</p>{% endif %}
+
+{% if result %}
+<section class="adm-panel adm-result">
+  <h2>Resultado de {{ filename }}</h2>
+  <div class="adm-stats adm-stats-sm">
+    <div class="adm-stat"><span>Nuevos</span><strong>{{ result.created }}</strong></div>
+    <div class="adm-stat"><span>Actualizados</span><strong>{{ result.updated }}</strong></div>
+    {% if opts.only_new %}<div class="adm-stat"><span>Sin cambios</span><strong>{{ result.skipped }}</strong></div>{% endif %}
+    <div class="adm-stat {{ 'is-alert' if result.no_price }}"><span>Sin precio</span><strong>{{ result.no_price|length }}</strong></div>
+    <div class="adm-stat {{ 'is-warn' if result.no_stock }}"><span>Sin stock</span><strong>{{ result.no_stock|length }}</strong></div>
+  </div>
+  {% if result.missing %}
+    <p class="adm-note">
+      {% if result.hidden_missing %}Se ocultaron de la tienda porque no están en el Excel:{% else %}Están en la tienda pero no en el Excel (siguen visibles):{% endif %}
+      <span class="adm-sku">{{ result.missing|join(', ') }}</span>
+    </p>
+  {% endif %}
+  <p><a class="adm-link" href="/admin/productos">Ver productos</a></p>
+</section>
+{% endif %}
+
+<div class="adm-cols">
+  <section class="adm-panel">
+    <h2>Subir catálogo</h2>
+    <form class="adm-form" method="post" action="/admin/importar" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <label class="adm-field"><span>Archivo .xlsx</span>
+        <input type="file" name="excel" id="excel" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+      </label>
+      <label class="adm-check"><input type="checkbox" name="only_new" id="only_new" value="1" {{ 'checked' if opts.only_new }}>
+        <span>Solo agregar productos nuevos <small>Los que ya existen no se tocan. Úsalo si ya editaste productos en el panel.</small></span></label>
+      <label class="adm-check"><input type="checkbox" name="hide_missing" id="hide_missing" value="1" {{ 'checked' if opts.hide_missing }}>
+        <span>Ocultar los que no estén en el Excel</span></label>
+      <button class="adm-btn adm-btn-primary" type="submit">Importar</button>
+    </form>
+  </section>
+
+  <section class="adm-panel">
+    <h2>Cómo funciona</h2>
+    <ul class="adm-bullets">
+      <li>Cada producto se reconoce por su <strong>ID producto</strong>. Si ya existe, se actualiza; si no, se crea.</li>
+      <li>Si un producto ya existe, el Excel <strong>reemplaza</strong> su nombre, descripción y datos. Un precio vacío o en 0 no borra el precio guardado.</li>
+      <li>El stock del Excel solo aplica a productos sin tallas ni colores. Los demás se manejan aquí en el panel.</li>
+      <li>Columnas obligatorias: <em>ID producto</em> y <em>Nombre del producto</em>.</li>
+      <li>Las fotos se suben desde la ficha de cada producto.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

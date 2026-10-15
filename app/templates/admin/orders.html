@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+{% from "admin/_macros.html" import status_chip, pager %}
+{% block title %}Órdenes{% endblock %}
+{% block content %}
+<div class="adm-head"><h1>Órdenes <span class="adm-count">{{ total }}</span></h1></div>
+
+<form class="adm-toolbar" method="get" action="/admin/ordenes">
+  <input type="search" name="q" id="q" value="{{ q }}" placeholder="Número, cliente, correo o teléfono" aria-label="Buscar órdenes">
+  {% if estado %}<input type="hidden" name="estado" value="{{ estado }}">{% endif %}
+  <button class="adm-btn" type="submit">Buscar</button>
+</form>
+
+<nav class="adm-tabs" aria-label="Estado">
+  <a href="/admin/ordenes{% if q %}?q={{ q|urlencode }}{% endif %}" {% if not estado %}aria-current="page"{% endif %}>Todas</a>
+  {% for key, label in statuses.items() %}
+    <a href="/admin/ordenes?estado={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}" {% if estado == key %}aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if orders %}
+<div class="adm-table-wrap">
+  <table class="adm-table">
+    <thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Ciudad</th><th>Pago</th><th class="num">Total</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td><a href="/admin/ordenes/{{ o.id }}">{{ o.number or ('#' ~ o.id) }}</a></td>
+        <td class="nowrap">{{ o.created_at|fecha }}</td>
+        <td class="name">{{ o.customer_name }}<span class="adm-sku">{{ o.customer_phone }}</span></td>
+        <td>{{ o.city }}</td>
+        <td>{{ payments.get(o.payment_method, o.payment_method) }}</td>
+        <td class="num">{{ o.total|cop }}</td>
+        <td>{{ status_chip(o.status, statuses) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ pager(page, pages, page_url) }}
+{% else %}
+  <div class="adm-empty">
+    <h2>{{ 'No hay órdenes con este filtro' if estado or q else 'Aún no hay órdenes' }}</h2>
+    <p>Las compras de la tienda aparecerán aquí cuando el checkout esté listo.</p>
+  </div>
+{% endif %}
+{% endblock %}

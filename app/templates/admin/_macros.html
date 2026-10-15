@@ -1,0 +1,24 @@
+{% macro stock_chip(p, low) %}
+  {% if not p.has_price %}<span class="chip chip-muted">Sin precio</span>
+  {% elif p.stock == 0 %}<span class="chip chip-bad">Agotado</span>
+  {% elif p.stock <= low %}<span class="chip chip-warn">{{ p.stock }} und.</span>
+  {% else %}<span class="chip chip-ok">{{ p.stock }} und.</span>{% endif %}
+{% endmacro %}
+
+{% macro status_chip(status, statuses) %}
+  <span class="chip chip-status-{{ status }}">{{ statuses.get(status, status) }}</span>
+{% endmacro %}
+
+{% macro field_error(errors, name) %}
+  {% if errors.get(name) %}<p class="adm-error" id="err-{{ name }}">{{ errors[name] }}</p>{% endif %}
+{% endmacro %}
+
+{% macro pager(page, pages, page_url) %}
+  {% if pages > 1 %}
+  <nav class="adm-pager" aria-label="Páginas">
+    {% if page > 1 %}<a href="{{ page_url(page - 1) }}">← Anterior</a>{% else %}<span></span>{% endif %}
+    <span>Página {{ page }} de {{ pages }}</span>
+    {% if page < pages %}<a href="{{ page_url(page + 1) }}">Siguiente →</a>{% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,9 @@
+{% extends "admin/base.html" %}
+{% block title %}Error{% endblock %}
+{% block content %}
+<div class="adm-empty">
+  <h1>No se pudo completar</h1>
+  <p>{{ message }}</p>
+  <a class="adm-btn" href="/admin">Ir al resumen</a>
+</div>
+{% endblock %}
